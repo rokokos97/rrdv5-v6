@@ -1,15 +1,14 @@
-import {NavLink, Redirect, Route, Switch, useParams, useRouteMatch} from "react-router-dom";
+import {Navigate, NavLink, Outlet, useParams, useRoutes} from "react-router-dom";
 
 function App() {
     const UserListPage = () => {
-        const { path } = useRouteMatch();
         return (
             <div>
                 <h1> USER LIST</h1>
                 <ul>
                     {new Array(5).fill("").map((_, index) => (
                         <li key={"user_list_component_" + index}>
-                            <NavLink to={`${path}/${index}`}>User {index}</NavLink>
+                            <NavLink to={index+"/profile"}>User {index}</NavLink>
                         </li>
                     ))}
                 </ul>
@@ -58,38 +57,35 @@ function App() {
         );
     }
     const Users = () => {
-        const { path } = useRouteMatch();
         return (
             <div>
                 <h1>USERS</h1>
                 <NavLink to='/'>Home Page</NavLink>
-                <Switch>
-                    <Route
-                        path={path + "/:userId/profile"}
-                        component={UserPage}
-                    />
-                    <Route path={path + "/:userId/edit"} component={EditUserPage} />
-                    <Route path={path} exact component={UserListPage} />
-                    <Redirect
-                        from={path + "/:userId"}
-                        to={path + "/:userId/profile"}
-                    />
-                </Switch>
+                <Outlet/>
             </div>
         );
     }
     const HomePage = () => <h1>HOME PAGE</h1>
+    const routs = useRoutes([
+        { path: "/", element: <HomePage/> },
+        { path: "users", element: <Users/>, children: [
+                { index: true, element: <UserListPage/>},
+                {path: ":userId", element: <Outlet/>, children:[
+                        { path: "profile", element: <UserPage /> },
+                        { path: "edit", element: <EditUserPage /> },
+                        { index: true, element: <Navigate to='./profile' /> },
+                        { path: "*", element: <Navigate to='../profile' /> }
+                    ]}
+            ]},
+        { path: "*", element: <Navigate to='/' /> },
+    ])
     return (
     <div>
       <h1>
         APPLICATION WITH NAVIGATION
       </h1>
       <NavLink to={"/users"}>Users</NavLink>
-      <Switch>
-        <Route path='/users' component={Users} />
-        <Route path='/' component={HomePage} />
-        <Redirect to='/' />
-      </Switch>
+        {routs}
     </div>
   );
 }
